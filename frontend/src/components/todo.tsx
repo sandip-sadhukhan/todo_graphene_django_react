@@ -1,8 +1,12 @@
-import React, { useState } from "react";
-import { useQuery, useMutation } from "@apollo/client";
+import React, { useEffect, useState } from "react";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client";
 import { CREATE_TODO, DELETE_TODO, GET_TODOS } from "../api";
 
-const Todo: React.FC = () => {
+interface TodoProps {
+  token: string | null;
+}
+
+const Todo: React.FC<TodoProps> = (props: TodoProps) => {
   const [todo, setTodo] = useState<string>("");
 
   interface Todo {
@@ -14,7 +18,16 @@ const Todo: React.FC = () => {
     todos: Todo[];
   }
 
-  const { loading, error, data } = useQuery<TodosData>(GET_TODOS);
+  const [getTodos, { loading, error, data }] =
+    useLazyQuery<TodosData>(GET_TODOS);
+
+  useEffect(() => {
+    if (props.token) {
+      localStorage.setItem("token", props.token);
+      getTodos();
+    }
+  }, [props.token, getTodos]);
+
   const [addTodo] = useMutation(CREATE_TODO, {
     refetchQueries: [{ query: GET_TODOS }],
   });
@@ -65,7 +78,7 @@ const Todo: React.FC = () => {
             <hr />
             <h6 className="text-center text-primary mb-3">Your Todos</h6>
             <ul className="list-group">
-              {error ? "Error..." : null}
+              {error && error.message}
               {loading ? "Loading..." : null}
               {data && data.todos.length === 0 ? (
                 <div className="alert alert-danger">No Todos are present</div>

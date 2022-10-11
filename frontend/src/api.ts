@@ -27,3 +27,11 @@ export const DELETE_TODO = gql`
     }
   }
 `;
+
+export const LOGIN = gql`
+  mutation ($username: String!, $password: String!) {
+    tokenAuth(username: $username, password: $password) {
+      token
+    }
+  }
+`;
